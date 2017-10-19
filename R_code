@@ -1,0 +1,85 @@
+
+install.packages("rworldmap")
+install.packages("mapproj")
+library(mapproj)
+library(ggplot2)
+library(grid)
+library(rworldmap)
+library(car)
+library(plyr)
+library(readr)
+library(Hmisc)
+## Upload data from csv file ##
+
+my_map_data <- c("countrycode","ticket_split2")
+map_data <- data_split[my_map_data]
+View(map_data)
+attach(map_data)
+
+## Calculate percent of people who perform split ticket vote by country in 2014
+
+p_splitvote <- prop.table(table(map_data), 1)
+
+describe(p_splitvote)
+
+## List of countries to be included in the map ##
+## 0 indicates that there no data available or that the country is not included in the analysis. ##
+## "countries is a new variable listing all European countries" ##
+## "ticket_percent" is a new variable indicating the percent of voters who voted for different parties between the national and the European electionticket_percent##
+
+
+
+countries <- c("Austria","Belgium","Bulgaria","Belarus", "Croatia", "Republic of Cyprus", "Czech Rep.","Denmark","Estonia","Finland","France",
+               "Germany","Greece","Hungary","Ireland","Italy","Latvia", "Lithuania","Luxembourg","Malta","Netherlands","Poland",
+               "Portugal","Romania","Russia", "Slovakia", "Slovenia","Spain","Sweden","Ukraine","Moldova","Malta","Albania","Bosnia and Herz.","Kosovo",
+               "Macedonia","United Kingdom", "Iceland", "Montenegro", "Norway","Serbia", "Switzerland", "Turkey")
+
+ticket_percent <-  c(36.36,25.09,0,0,0,0,0, 52.81,0, 44.16, 47.39,34.16 , 43.87,0, 46.81, 35.01,0,0,32.71,0, 53.22,0,42.50,
+                     0,0,0,0,50.99, 50.61,0,0,0,0,0,0,0,40.25,0,0,0,0,0,0)
+
+## New dataset including the two new variables: countries and ticket_percent##
+
+map_data_2 <- data.frame(countries,ticket_percent)
+map_data_2
+map_data_2$ticket_percent[map_data_2$ticket_percent <=0] = NA
+
+
+worldMap <- getMap()
+
+europeanUnion <- c("Austria","Belgium","Bulgaria","Belarus", "Croatia", "Republic of Cyprus","Czech Rep.","Denmark","Estonia","Finland","France",
+                   "Germany","Greece","Hungary","Ireland","Italy","Latvia", "Lithuania","Luxembourg","Malta","Netherlands","Poland",
+                   "Portugal","Romania","Russia", "Slovakia", "Slovenia","Spain","Sweden","Ukraine","Moldova","Malta","Albania","Bosnia and Herz.","Kosovo",
+                   "Macedonia","United Kingdom", "Iceland", "Montenegro", "Norway","Serbia", "Switzerland", "Turkey")
+
+
+EUcountries <- which(worldMap$NAME%in%countries)
+EUcountriesCoords <- lapply(EUcountries, function(i){
+  world_frame <- data.frame(worldMap@polygons[[i]]@Polygons[[1]]@coords)
+  world_frame$region =as.character(worldMap$NAME[i])
+  colnames(world_frame) <- list("long", "lat", "region")
+  return(world_frame)
+})
+EUcountriesCoords <- do.call("rbind", EUcountriesCoords)
+
+value <- sample(x = map_data_2$ticket_percent, size = length(countries),
+                replace = TRUE)
+europeanUnionTable <- data.frame(country = map_data_2$countries, value = map_data_2$ticket_percent)
+EUcountriesCoords$value <- europeanUnionTable$value[match(EUcountriesCoords$region,europeanUnionTable$country)]
+
+EUmap <- ggplot() + geom_polygon(data = EUcountriesCoords, aes(x = long, y = lat, group = region, fill = value, na.value = "grey50"),
+                             colour = "black", size = 0.1) +  coord_map(xlim = c(-20, 40),  ylim = c(32, 73))  
+
+EUmap <- EUmap + scale_fill_gradient(name = "ticket-split", low = "#FFFF00FF", high = "#FF0000FF", na.value = "grey51", limits = c(0, 100))
+
+
+EUmap <- EUmap + theme(panel.background = element_rect(fill = NA, colour = NA),
+                       axis.text.x = element_blank(),
+                       axis.text.y = element_blank(), axis.ticks.x = element_blank(),
+                       axis.ticks.y = element_blank(), axis.title = element_blank(),
+                       panel.grid.major = element_blank(),
+                       rect = element_blank(),
+                       plot.margin = unit(0 * c(-1.5, -1.5, -1.5, -1.5), "lines"))
+EUmap
+
+ggsave(filename="map_2014.pdf",plot=EUmap)
+
