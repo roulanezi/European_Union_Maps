@@ -13,6 +13,6 @@ Only 2 variables are included in the file the ID code for each country in the da
 
 Before running the code two libraries need to be installed  "rworldmap" and "mapproj" 
 
-This is the final outcome 
+
 
 
