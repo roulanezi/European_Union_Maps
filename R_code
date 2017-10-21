@@ -11,16 +11,8 @@ library(readr)
 library(Hmisc)
 ## Upload data from csv file ##
 
-my_map_data <- c("countrycode","ticket_split2")
-map_data <- data_split[my_map_data]
-View(map_data)
-attach(map_data)
 
-## Calculate percent of people who perform split ticket vote by country in 2014
 
-p_splitvote <- prop.table(table(map_data), 1)
-
-describe(p_splitvote)
 
 ## List of countries to be included in the map ##
 ## 0 indicates that there no data available or that the country is not included in the analysis. ##
@@ -45,11 +37,6 @@ map_data_2$ticket_percent[map_data_2$ticket_percent <=0] = NA
 
 
 worldMap <- getMap()
-
-europeanUnion <- c("Austria","Belgium","Bulgaria","Belarus", "Croatia", "Republic of Cyprus","Czech Rep.","Denmark","Estonia","Finland","France",
-                   "Germany","Greece","Hungary","Ireland","Italy","Latvia", "Lithuania","Luxembourg","Malta","Netherlands","Poland",
-                   "Portugal","Romania","Russia", "Slovakia", "Slovenia","Spain","Sweden","Ukraine","Moldova","Malta","Albania","Bosnia and Herz.","Kosovo",
-                   "Macedonia","United Kingdom", "Iceland", "Montenegro", "Norway","Serbia", "Switzerland", "Turkey")
 
 
 EUcountries <- which(worldMap$NAME%in%countries)
